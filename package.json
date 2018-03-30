@@ -1,0 +1,22 @@
+{
+  "name": "course-arrange",
+  "version": "0.0.1",
+  "description": "A course arrange (schedule) program",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/huchenlei/course-arrange.git"
+  },
+  "author": "Chenlei HU",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/huchenlei/course-arrange/issues"
+  },
+  "homepage": "https://github.com/huchenlei/course-arrange#readme"
+}
