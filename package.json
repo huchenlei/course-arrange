@@ -21,7 +21,8 @@
   },
   "homepage": "https://github.com/huchenlei/course-arrange#readme",
   "dependencies": {
-    "cassowary": "0.0.2",
+    "@types/lodash": "^4.14.106",
+    "lodash": "^4.17.5",
     "typescript": "^2.8.1"
   },
   "devDependencies": {
