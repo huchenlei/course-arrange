@@ -8,6 +8,12 @@ import {CourseSection, CourseSolution} from "./Course";
 export abstract class Constraint {
     public name: string;
     public description: string;
+    /**
+     * How many lower one level priority constraint are equivalent
+     * to one higher one level priority constraint
+     * @type {number} default 5
+     */
+    public static prioritySeparationBase = 5;
     public priority: number;
 
     /**
@@ -24,7 +30,8 @@ export abstract class Constraint {
     }
 
     public eval(solution: CourseSolution, toAdd: CourseSection) {
-        return this._eval(solution, toAdd) * Math.pow(10, this.priority);
+        return this._eval(solution, toAdd) *
+            Math.pow(Constraint.prioritySeparationBase, this.priority);
     }
 
     /**
