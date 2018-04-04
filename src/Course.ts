@@ -3,26 +3,22 @@ import {Constraint} from "./Constraint";
 /**
  * Created by Charlie on 2018-04-02.
  */
-
-export class CourseSection {
-    belongsTo: CourseComponent | null;
+export class Time {
     day: number;
-    end: number;
     start: number;
+    end: number;
 
-    constructor(day: number, end: number, start: number) {
+    constructor(day: number, start: number, end: number) {
         if (start > end)
-            throw `Course ends(${end}) before start(${start})`;
+            throw `Time ends(${end}) before start(${start})`;
         if (day < 1 || day > 7)
             throw `Invalid week day ${day}, must in range [1, 7]`;
-
         this.day = day;
-        this.end = end;
         this.start = start;
-        this.belongsTo = null;
+        this.end = end;
     }
 
-    intersect(a: CourseSection): boolean {
+    intersect(a: Time): boolean {
         if (a.day != this.day)
             return false;
         else {
@@ -31,10 +27,32 @@ export class CourseSection {
     }
 }
 
+export class CourseSection {
+    belongsTo: CourseComponent | null;
+    times: Time[];
+
+    constructor(times: Time[]) {
+        this.belongsTo = null;
+        this.times = times;
+    }
+
+    intersect(a: CourseSection): boolean {
+        for (let time of this.times) {
+            for (let otherTime of a.times) {
+                if (time.intersect(otherTime)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+}
+
 export enum CourseComponentType {
     LEC, // Lecture
     TUT, // Tutorial
     PRA, // Lab
+    UNKNOWN,
 }
 
 export class CourseComponent {
@@ -43,19 +61,20 @@ export class CourseComponent {
     public sections: Array<CourseSection>;
 
     public constructor(type: CourseComponentType,
-                       ...sections: Array<CourseSection>) {
+                       sections: Array<CourseSection>) {
         this.type = type;
         this.sections = sections;
         sections.forEach(s => s.belongsTo = this);
         this.belongsTo = null;
     }
+
 }
 
 export class Course {
     public name: string;
     public components: Array<CourseComponent>;
 
-    public constructor(name: string, ...components: Array<CourseComponent>) {
+    public constructor(name: string, components: Array<CourseComponent>) {
         this.name = name;
         this.components = components;
         components.forEach(c => c.belongsTo = this);
@@ -63,7 +82,7 @@ export class Course {
 }
 
 export class CourseSolution {
-    private _score: number;
+    private readonly _score: number;
     public choices: CourseSection[];
 
     constructor(score: number = 0, choices: CourseSection[] = []) {
