@@ -1,5 +1,6 @@
 'use strict';
-import {CourseSection, CourseSolution} from "./Course";
+import {CourseSection, CourseSolution, Time} from "./Course";
+import Set from "typescript-collections/dist/lib/Set";
 
 /**
  * Created by Charlie on 2018-04-02.
@@ -61,5 +62,44 @@ export class TimeConflictConstraint extends Constraint {
             intersect = intersect || toAdd.intersect(choice);
         }
         return intersect ? -1 : 0;
+    }
+}
+
+export class SectionPreferenceConstraint extends Constraint {
+    private sections: Set<CourseSection>;
+
+    /**
+     * This Constraint offers an option for user to specify the course section
+     * they prefer with a priority
+     *
+     * @param {CourseSection[]} sections course sections
+     * @param {number} priority priority level
+     */
+    constructor(sections: CourseSection[], priority: number) {
+        super("SectionPreferenceConstraint", priority);
+        this.sections = new Set<CourseSection>(cs => cs.toString());
+        sections.forEach(s => this.sections.add(s));
+    }
+
+    public _eval(solution: CourseSolution, toAdd: CourseSection): number {
+        return this.sections.contains(toAdd) ? 1 : 0;
+    }
+}
+
+export class TimeSlotAvoidConstraint extends Constraint {
+    private readonly times: Time[];
+
+    constructor(times: Time[], priority: number) {
+        super("TimeSlotAvoidConstraint", priority);
+        this.times = times;
+    }
+
+    public _eval(solution: CourseSolution, toAdd: CourseSection): number {
+        let violationCount = 0;
+        for (let time of this.times) {
+            if (toAdd.intersect(time))
+                violationCount++;
+        }
+        return -violationCount;
     }
 }

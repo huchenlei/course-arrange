@@ -25,6 +25,10 @@ export class Time {
             return (a.start > this.end || this.start > a.end)
         }
     }
+
+    toString(): string {
+        return `{day: ${this.day}, start: ${this.start}, end: ${this.end}`;
+    }
 }
 
 export class CourseSection {
@@ -36,15 +40,29 @@ export class CourseSection {
         this.times = times;
     }
 
-    intersect(a: CourseSection): boolean {
-        for (let time of this.times) {
-            for (let otherTime of a.times) {
-                if (time.intersect(otherTime)) {
-                    return true;
-                }
-            }
+    intersect(a: CourseSection | Time): boolean {
+        if (a instanceof Time) {
+            for (let time of this.times)
+                if (time.intersect(a))
+                    return false;
+            return true;
+        } else {
+            for (let time of this.times)
+                for (let otherTime of a.times)
+                    if (time.intersect(otherTime))
+                        return true;
+            return false;
         }
-        return false;
+    }
+
+    toString(): string {
+        if (this.belongsTo == null || this.belongsTo.belongsTo == null) {
+            return "";
+        } else {
+            return `course: ${this.belongsTo.belongsTo.name} type: ${
+                this.belongsTo.type} times: ${
+                this.times.map(t => t.toString())}`;
+        }
     }
 }
 

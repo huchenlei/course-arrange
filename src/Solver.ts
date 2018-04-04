@@ -13,6 +13,7 @@ import log = require("loglevel");
 export abstract class Solver {
     protected courses: Course[];
     protected components: CourseComponent[];
+    protected possibleSolutionNum: number;
 
     protected constructor(courses: Course[]) {
         log.info("Solver with following courses");
@@ -24,6 +25,12 @@ export abstract class Solver {
                 this.components.push(component);
             }
         }
+        const optionNums = this.components.map(c => c.sections.length);
+        this.possibleSolutionNum = optionNums.reduce((total, num) => total * num, 1);
+
+        log.info(`${this.components.length} components to consider`);
+        log.info(`components has respective number of optional section ${optionNums}`);
+        log.info(`${this.possibleSolutionNum} possible solutions`);
     }
 
     public abstract solve(constraints: Constraint[], resultNum: number)
@@ -31,14 +38,29 @@ export abstract class Solver {
 }
 
 export class ExhaustiveSolver extends Solver {
-    constructor(courses: Course[]) {
+    /**
+     * Since exhaustive solver attempts to find every possible solution
+     * for given array of courses, a threshold is set to avoid futile work
+     * if the possible solution set is too large
+     *
+     * default value is 1M (takes roughly 3 sec)
+     */
+    private _threshold: number;
+
+    set threshold(value: number) {
+        this._threshold = value;
+    }
+
+    constructor(courses: Course[], threshold: number = 1000 * 1000) {
         super(courses);
+        this._threshold = threshold;
     }
 
     solve(constraints: Constraint[], resultNum: number = 10): CourseSolution[] {
-        log.info(`${this.components.length} components to consider`);
-        log.info(`components has respective number of optional section ${
-            this.components.map(c => c.sections.length)}`);
+        if (this.possibleSolutionNum > this._threshold) {
+            throw new Error(`Possible solution set is too large(${
+                this.possibleSolutionNum}), max ${this._threshold} allowed`);
+        }
 
         const rootSolution = new CourseSolution();
         const components = this.components;
@@ -75,7 +97,6 @@ export class ExhaustiveSolver extends Solver {
         }
 
         _solve(rootSolution, 0);
-        log.info(`${solutionCount} solution(s) found in total`);
 
         const _solution: CourseSolution[] = [];
         solutions.forEach(s => {
@@ -86,6 +107,10 @@ export class ExhaustiveSolver extends Solver {
 }
 
 export class StepHerusticSolver extends Solver {
+    constructor(courses: Course[]) {
+        super(courses);
+    }
+
     solve(constraints: Constraint[], resultNum: number = 10): CourseSolution[] {
         return [];
     }

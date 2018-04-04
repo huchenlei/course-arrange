@@ -100,7 +100,9 @@ function parseCourseFromJson(file: string): Course {
     );
 }
 
-export function generateSampleCourses(courseNum: number): Course[] {
+export function generateSampleCourses(courseNum: number,
+                                      minComponent: number = 1,
+                                      minSection: number = 1): Course[] {
     const files = fs.readdirSync(DATA_ROOT);
     const indexSet = new Set<number>();
     const result: Course[] = [];
@@ -110,24 +112,24 @@ export function generateSampleCourses(courseNum: number): Course[] {
         if (indexSet.contains(index))
             continue;
         const course = parseCourseFromJson(DATA_ROOT + files[index]);
-        if (course.components.length == 0)
+        if (course.components.length < minComponent)
             continue;
-        let hasEmpty = false;
+        let hasViolation = false;
         for (let component of course.components) {
-            if (component.sections.length == 0) {
-                hasEmpty = true;
+            if (component.sections.length < minSection) {
+                hasViolation = true;
                 break;
             }
 
             for (let section of component.sections) {
                 if (section.times.length == 0) {
-                    hasEmpty = true;
+                    hasViolation = true;
                     break;
                 }
             }
-            if (hasEmpty) break;
+            if (hasViolation) break;
         }
-        if (hasEmpty) continue;
+        if (hasViolation) continue;
         indexSet.add(index);
         result.push(course);
     }

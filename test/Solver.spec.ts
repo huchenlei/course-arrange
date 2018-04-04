@@ -17,7 +17,7 @@ const constraints = [
 describe('ExhaustiveSolver', function () {
     let solver: ExhaustiveSolver;
     it('should be created', function () {
-        solver = new ExhaustiveSolver(generateSampleCourses(5));
+        solver = new ExhaustiveSolver(generateSampleCourses(5, 1, 3));
     });
 
     it('should solve for results', function () {
