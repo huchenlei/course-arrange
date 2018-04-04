@@ -88,7 +88,7 @@ export class CourseSolution {
     constructor(score: number = 0, choices: CourseSection[] = []) {
         this._score = score;
         // Deep copy the choices
-        this.choices = Object().assign([], choices);
+        this.choices = Object.assign([], choices);
     }
 
     public addCourseSection(constraints: Constraint[], section: CourseSection) {

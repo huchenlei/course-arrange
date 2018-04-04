@@ -13,13 +13,16 @@ describe("CourseParser", function () {
         for (let course of courses) {
             console.log(course.name);
             expect(course.name.length).greaterThan(0);
+            expect(course.components.length).greaterThan(0);
 
             for (let component of course.components) {
                 expect(component.type).to.not.be.equal(CourseComponentType.UNKNOWN);
                 expect(component.belongsTo).to.be.equal(course);
+                expect(component.sections.length).greaterThan(0);
 
                 for (let section of component.sections) {
                     expect(section.belongsTo).to.be.equal(component);
+                    expect(section.times.length).greaterThan(0);
                 }
             }
         }

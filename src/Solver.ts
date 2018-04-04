@@ -8,13 +8,15 @@
 import {Course, CourseComponent, CourseSolution} from "./Course";
 import {Constraint} from "./Constraint";
 import Collections = require("typescript-collections");
-
+import log = require("loglevel");
 
 export abstract class Solver {
     protected courses: Course[];
     protected components: CourseComponent[];
 
     protected constructor(courses: Course[]) {
+        log.info("Solver with following courses");
+        courses.forEach(c => log.info(c.name));
         this.courses = courses;
         this.components = [];
         for (let course of courses) {
@@ -34,6 +36,10 @@ export class ExhaustiveSolver extends Solver {
     }
 
     solve(constraints: Constraint[], resultNum: number = 10): CourseSolution[] {
+        log.info(`${this.components.length} components to consider`);
+        log.info(`components has respective number of optional section ${
+            this.components.map(c => c.sections.length)}`);
+
         const rootSolution = new CourseSolution();
         const components = this.components;
         const solutions = new Collections.PriorityQueue<CourseSolution>(
@@ -47,9 +53,11 @@ export class ExhaustiveSolver extends Solver {
                 }
             }
         );
+        let solutionCount = 0;
 
         function _solve(solution: CourseSolution, componentIndex: number) {
             if (componentIndex == components.length) {
+                solutionCount++; // Count every possible solution found
                 // End of recursion
                 if (solutions.size() < resultNum) {
                     solutions.add(solution);
@@ -57,6 +65,7 @@ export class ExhaustiveSolver extends Solver {
                     solutions.dequeue();
                     solutions.add(solution);
                 }
+                return;
             }
 
             for (let section of components[componentIndex].sections) {
@@ -66,6 +75,7 @@ export class ExhaustiveSolver extends Solver {
         }
 
         _solve(rootSolution, 0);
+        log.info(`${solutionCount} solution(s) found in total`);
 
         const _solution: CourseSolution[] = [];
         solutions.forEach(s => {

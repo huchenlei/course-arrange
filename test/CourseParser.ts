@@ -103,13 +103,33 @@ function parseCourseFromJson(file: string): Course {
 export function generateSampleCourses(courseNum: number): Course[] {
     const files = fs.readdirSync(DATA_ROOT);
     const indexSet = new Set<number>();
-    while (indexSet.size() < courseNum) {
-        indexSet.add(Math.round(Math.random() * files.length));
-    }
+    const result: Course[] = [];
 
-    let result: Course[] = [];
-    indexSet.forEach(i => {
-        result.push(parseCourseFromJson(DATA_ROOT + files[i]));
-    });
+    while (indexSet.size() < courseNum) {
+        const index = Math.round(Math.random() * files.length);
+        if (indexSet.contains(index))
+            continue;
+        const course = parseCourseFromJson(DATA_ROOT + files[index]);
+        if (course.components.length == 0)
+            continue;
+        let hasEmpty = false;
+        for (let component of course.components) {
+            if (component.sections.length == 0) {
+                hasEmpty = true;
+                break;
+            }
+
+            for (let section of component.sections) {
+                if (section.times.length == 0) {
+                    hasEmpty = true;
+                    break;
+                }
+            }
+            if (hasEmpty) break;
+        }
+        if (hasEmpty) continue;
+        indexSet.add(index);
+        result.push(course);
+    }
     return result;
 }
