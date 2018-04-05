@@ -12,9 +12,9 @@ export abstract class Constraint {
     /**
      * How many lower one level priority constraint are equivalent
      * to one higher one level priority constraint
-     * @type {number} default 5
+     * @type {number} default 4
      */
-    public static prioritySeparationBase = 5;
+    public static prioritySeparationBase = 4;
     public priority: number;
 
     /**
@@ -56,7 +56,7 @@ export class TimeConflictConstraint extends Constraint {
         super("TimeConflictConstraint", priority);
     }
 
-    public _eval(solution: CourseSolution, toAdd: CourseSection): number {
+    protected _eval(solution: CourseSolution, toAdd: CourseSection): number {
         let intersect = false;
         for (let choice of solution.choices) {
             intersect = intersect || toAdd.intersect(choice);
@@ -81,7 +81,7 @@ export class SectionPreferenceConstraint extends Constraint {
         sections.forEach(s => this.sections.add(s));
     }
 
-    public _eval(solution: CourseSolution, toAdd: CourseSection): number {
+    protected _eval(solution: CourseSolution, toAdd: CourseSection): number {
         return this.sections.contains(toAdd) ? 1 : 0;
     }
 }
@@ -89,12 +89,19 @@ export class SectionPreferenceConstraint extends Constraint {
 export class TimeSlotAvoidConstraint extends Constraint {
     private readonly times: Time[];
 
+    /**
+     * This Constraint let user selects time slots where they do NOT want
+     * to have class in (like every day at noon for lunch, etc.)
+     *
+     * @param {Time[]} times time slots the user want to AVOID
+     * @param {number} priority priority level
+     */
     constructor(times: Time[], priority: number) {
         super("TimeSlotAvoidConstraint", priority);
         this.times = times;
     }
 
-    public _eval(solution: CourseSolution, toAdd: CourseSection): number {
+    protected _eval(solution: CourseSolution, toAdd: CourseSection): number {
         let violationCount = 0;
         for (let time of this.times) {
             if (toAdd.intersect(time))

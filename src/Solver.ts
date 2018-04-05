@@ -9,6 +9,7 @@ import {Course, CourseComponent, CourseSolution} from "./Course";
 import {Constraint} from "./Constraint";
 import Collections = require("typescript-collections");
 import log = require("loglevel");
+import shuffle = require("shuffle-array");
 
 export abstract class Solver {
     protected courses: Course[];
@@ -65,16 +66,7 @@ export class ExhaustiveSolver extends Solver {
         const rootSolution = new CourseSolution();
         const components = this.components;
         const solutions = new Collections.PriorityQueue<CourseSolution>(
-            (a, b) => {
-                if (a.score == b.score) {
-                    return 0;
-                } else if (a.score < b.score) {
-                    return -1;
-                } else {
-                    return 1;
-                }
-            }
-        );
+            (a, b) => a.compareTo(b));
         let solutionCount = 0;
 
         function _solve(solution: CourseSolution, componentIndex: number) {
@@ -106,12 +98,77 @@ export class ExhaustiveSolver extends Solver {
     }
 }
 
-export class StepHerusticSolver extends Solver {
-    constructor(courses: Course[]) {
+export class StepHeuristicSolver extends Solver {
+    private maxIteration: number;
+    private multiStartNum: number;
+
+
+    /**
+     * The algorithm is not guaranteed to find the solution that satisfy
+     * the constraints user specified, need to terminate the searching
+     * if it takes too long. (after a max iteration num is reached)
+     *
+     * @param {Course[]} courses
+     * @param {number} maxIteration
+     * @param {number} multiStartNum
+     */
+    constructor(courses: Course[],
+                maxIteration: number = 1000 * 1000,
+                multiStartNum: number = 10) {
         super(courses);
+        this.maxIteration = maxIteration;
+        this.multiStartNum = multiStartNum;
     }
 
+    /**
+     * Based on the simple fact that solutions with highest score is more
+     * likely to generate solutions with higher score
+     *
+     * Each time pick a solution with highest score but not yet complete
+     * in queue and advance a step, until we found enough solutions equal to
+     * `resultNum`
+     *
+     * @param {Constraint[]} constraints
+     * @param {number} resultNum
+     * @return {CourseSolution[]}
+     */
     solve(constraints: Constraint[], resultNum: number = 10): CourseSolution[] {
-        return [];
+        const result: CourseSolution[] = [];
+        for (let i = 0; i < this.multiStartNum; i++) {
+            const components = shuffle(this.components, {'copy': true});
+            const solution = this.solveWithGivenSequence(components, constraints, resultNum);
+            result.push(...solution);
+        }
+        result.sort((a, b) => -a.compareTo(b));
+        return result.slice(0, resultNum);
+    }
+
+    private solveWithGivenSequence(components: CourseComponent[],
+                                   constraints: Constraint[],
+                                   resultNum: number) {
+        const result: CourseSolution[] = [];
+        const queue = new Collections.PriorityQueue<CourseSolution>(
+            (a, b) => -a.compareTo(b)); // Max score out first
+        const rootSolution = new CourseSolution();
+        queue.enqueue(rootSolution);
+
+        for (let i = 0; i < this.maxIteration; i++) {
+            const bestSolution = <CourseSolution>queue.dequeue();
+            const componentIndex = bestSolution.choices.length;
+
+            if (componentIndex == components.length) {
+                // Output to result
+                result.push(bestSolution);
+                if (result.length == resultNum) {
+                    return result;
+                }
+            }
+
+            for (let section of components[componentIndex].sections) {
+                const newSolution = bestSolution.addCourseSection(constraints, section);
+                queue.enqueue(newSolution);
+            }
+        }
+        return result;
     }
 }

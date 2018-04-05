@@ -120,4 +120,14 @@ export class CourseSolution {
     get score(): number {
         return this._score;
     }
+
+    compareTo(other: CourseSolution): number {
+        if (this.score == other.score) {
+            return 0;
+        } else if (this.score < other.score) {
+            return -1;
+        } else {
+            return 1;
+        }
+    }
 }
