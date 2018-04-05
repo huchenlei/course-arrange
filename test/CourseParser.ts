@@ -7,7 +7,7 @@ import _ = require("lodash");
 const COURSE_DATA_ROOT = './test/resources/courses/';
 const BUILDING_DATA_ROOT = './test/resources/buildings/';
 
-declare module UofT {
+export declare module UofT {
     export interface Time {
         day: string;
         start: number;
@@ -75,10 +75,7 @@ const LOC_TABLE = new Collections.Dictionary<string, Location>();
     }
 }
 
-
-function parseCourseFromJson(file: string): Course {
-    const rawCourse = <UofT.Course>JSON.parse(fs.readFileSync(file, 'utf-8'));
-
+export function parseCourse(rawCourse: UofT.Course) {
     function weekStringToNum(week: string): number {
         switch (week) {
             case "MONDAY":
@@ -140,6 +137,15 @@ function parseCourseFromJson(file: string): Course {
     );
 }
 
+export function parseCourseFromJsonString(jsonString: string): Course {
+    const rawCourse = <UofT.Course>JSON.parse(jsonString);
+    return parseCourse(rawCourse);
+}
+
+export function parseCourseFromJsonFile(file: string): Course {
+    return parseCourseFromJsonString(fs.readFileSync(file, 'utf-8'));
+}
+
 export function generateSampleCourses(courseNum: number,
                                       minComponent: number = 1,
                                       minSection: number = 1): Course[] {
@@ -151,7 +157,7 @@ export function generateSampleCourses(courseNum: number,
         const index = Math.round(Math.random() * files.length);
         if (indexSet.contains(index))
             continue;
-        const course = parseCourseFromJson(COURSE_DATA_ROOT + files[index]);
+        const course = parseCourseFromJsonFile(COURSE_DATA_ROOT + files[index]);
         if (course.components.length < minComponent)
             continue;
         let hasViolation = false;
