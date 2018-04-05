@@ -3,12 +3,46 @@ import {Constraint} from "./Constraint";
 /**
  * Created by Charlie on 2018-04-02.
  */
+
+export class Location {
+    name: string;
+    longitude: number;
+    latitude: number;
+
+    constructor(name: string = "UNKNOWN", longitude: number = 0, latitude: number = 0) {
+        this.name = name;
+        this.longitude = longitude;
+        this.latitude = latitude;
+    }
+
+    static toRadian(degree: number): number {
+        return Math.PI * degree / 180;
+    }
+
+    distanceTo(other: Location): number {
+        const R = 6371; // Radius of earth
+        const latDiff = Location.toRadian(this.latitude - other.latitude);
+        const longDiff = Location.toRadian(this.longitude - other.longitude);
+        const sinLatDiff = Math.sin(latDiff / 2);
+        const sinLongDiff = Math.sin(longDiff / 2);
+
+        const a = sinLatDiff * sinLatDiff
+            + Math.cos(Location.toRadian(this.latitude))
+            * Math.cos(Location.toRadian(other.latitude))
+            * sinLongDiff * sinLongDiff;
+
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c * 1000; // Convert to Meters
+    }
+}
+
 export class Time {
     day: number;
     start: number;
     end: number;
+    location: Location;
 
-    constructor(day: number, start: number, end: number) {
+    constructor(day: number, start: number, end: number, location: Location) {
         if (start > end)
             throw `Time ends(${end}) before start(${start})`;
         if (day < 1 || day > 7)
@@ -16,6 +50,7 @@ export class Time {
         this.day = day;
         this.start = start;
         this.end = end;
+        this.location = location;
     }
 
     intersect(a: Time): boolean {
@@ -23,6 +58,14 @@ export class Time {
             return false;
         else {
             return (a.start > this.end || this.start > a.end)
+        }
+    }
+
+    adjacent(a: Time): boolean {
+        if (a.day != this.day)
+            return false;
+        else {
+            return (a.start == this.end) || (this.start == a.end);
         }
     }
 

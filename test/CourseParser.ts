@@ -1,10 +1,11 @@
 'use strict';
-import {Course, CourseComponent, CourseComponentType, CourseSection, Time} from "../src/Course";
+import {Course, CourseComponent, CourseComponentType, CourseSection, Time, Location} from "../src/Course";
 import fs = require("fs");
-import Set from "typescript-collections/dist/lib/Set";
+import Collections = require("typescript-collections");
 import _ = require("lodash");
 
-const DATA_ROOT = './test/resources/courses/';
+const COURSE_DATA_ROOT = './test/resources/courses/';
+const BUILDING_DATA_ROOT = './test/resources/buildings/';
 
 declare module UofT {
     export interface Time {
@@ -38,7 +39,42 @@ declare module UofT {
         breadths: number[];
         meeting_sections: MeetingSection[];
     }
+
+    export interface Address {
+        street: string;
+        city: string;
+        province: string;
+        country: string;
+        postal: string;
+    }
+
+    export interface Building {
+        id: string;
+        code: string;
+        name: string;
+        short_name: string;
+        campus: string;
+        address: Address;
+        lat: number;
+        lng: number;
+        polygon: number[][];
+    }
 }
+
+const LOC_TABLE = new Collections.Dictionary<string, Location>();
+{
+    const files = fs.readdirSync(BUILDING_DATA_ROOT);
+    for (let file of files) {
+        const building = <UofT.Building>JSON.parse(
+            fs.readFileSync(BUILDING_DATA_ROOT + file, 'utf-8'));
+        LOC_TABLE.setValue(building.code, new Location(
+            building.code,
+            building.lat,
+            building.lng
+        ));
+    }
+}
+
 
 function parseCourseFromJson(file: string): Course {
     const rawCourse = <UofT.Course>JSON.parse(fs.readFileSync(file, 'utf-8'));
@@ -91,7 +127,11 @@ function parseCourseFromJson(file: string): Course {
                                 time => {
                                     const start = Math.round(time.start / 3600);
                                     const end = Math.round(time.end / 3600);
-                                    return new Time(weekStringToNum(time.day), start, end);
+                                    const locationName = time.location.split(" ")[0];
+                                    let location = LOC_TABLE.getValue(locationName);
+                                    if (location == undefined)
+                                        location = new Location();
+                                    return new Time(weekStringToNum(time.day), start, end, location);
                                 }
                             ))
                         ));
@@ -103,15 +143,15 @@ function parseCourseFromJson(file: string): Course {
 export function generateSampleCourses(courseNum: number,
                                       minComponent: number = 1,
                                       minSection: number = 1): Course[] {
-    const files = fs.readdirSync(DATA_ROOT);
-    const indexSet = new Set<number>();
+    const files = fs.readdirSync(COURSE_DATA_ROOT);
+    const indexSet = new Collections.Set<number>();
     const result: Course[] = [];
 
     while (indexSet.size() < courseNum) {
         const index = Math.round(Math.random() * files.length);
         if (indexSet.contains(index))
             continue;
-        const course = parseCourseFromJson(DATA_ROOT + files[index]);
+        const course = parseCourseFromJson(COURSE_DATA_ROOT + files[index]);
         if (course.components.length < minComponent)
             continue;
         let hasViolation = false;

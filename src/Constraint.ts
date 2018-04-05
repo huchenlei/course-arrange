@@ -110,3 +110,30 @@ export class TimeSlotAvoidConstraint extends Constraint {
         return -violationCount;
     }
 }
+
+export class LocationDistanceConstraint extends Constraint {
+    private readonly maxDistance: number;
+
+    /**
+     * This Constraint allows user to specify a max distance they want to travel
+     * when 2 courses is adjacent to each other
+     *
+     * @param {number} maxDistance in meter
+     * @param {number} priority
+     */
+    constructor(maxDistance: number, priority: number) {
+        super("LocationDistanceConstraint", priority);
+        this.maxDistance = maxDistance;
+    }
+
+    protected _eval(solution: CourseSolution, toAdd: CourseSection): number {
+        let violationCount = 0;
+        for (let section of solution.choices)
+            for (let time of section.times)
+                for (let addTime of toAdd.times)
+                    if (time.adjacent(addTime) &&
+                        time.location.distanceTo(addTime.location))
+                        violationCount++;
+        return -violationCount;
+    }
+}
