@@ -72,7 +72,7 @@ export class Time {
     }
 
     toString(): string {
-        return `{day: ${this.day}, start: ${this.start}, end: ${this.end}`;
+        return `{day: ${this.day}, start: ${this.start}, end: ${this.end}}`;
     }
 }
 
