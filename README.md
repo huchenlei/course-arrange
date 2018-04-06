@@ -27,6 +27,6 @@ highest score), until finding enough solutions.
 - Need to develop a more efficient solver algorithm
 - Need more test-case for the performance and correctness for solvers
 ---
-#### Please contact [me](huchenlei.github.io) directly if you would like to be part of this project
+#### Please contact [me](https://huchenlei.github.io) directly if you would like to be part of this project
 
 
