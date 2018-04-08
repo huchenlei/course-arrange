@@ -10,7 +10,7 @@ log.enableAll();
  * Created by Charlie on 2018-03-30.
  */
 
-const sampleCourses = generateSampleCourses(6, 2, 3);
+const sampleCourses = generateSampleCourses(5, 1, 3);
 
 const constraints = [
     new TimeConflictConstraint()
@@ -23,11 +23,20 @@ describe('ExhaustiveSolver', function () {
     });
 
     it('should solve for results', function () {
+        const resultNum = 10;
         console.time("Exhaustive Solve");
-        const result = solver.solve(constraints, 1);
+        const result = solver.solve(constraints, resultNum);
         console.timeEnd("Exhaustive Solve");
 
-        expect(result.length).to.be.equal(1);
+        expect(result.length).to.be.equal(resultNum);
+        let prev = null;
+        for (let r of result) {
+            if (prev != null)
+                expect(r.score <= prev.score).to.be.true;
+            prev = r;
+        }
+
+        console.log(result);
     });
 });
 
